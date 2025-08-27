@@ -25,7 +25,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
+#include "string.h"
+#include "usart.h"
+#include "semphr.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -144,10 +147,18 @@ void MX_FREERTOS_Init(void) {
 void AppTask_High(void *argument)
 {
   /* USER CODE BEGIN AppTask_High */
+  char strHigh[] = "Task_High get token \r\n";
+
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    if (xSemaphoreTake(tokenHandle, portMAX_DELAY) == pdTRUE)
+    {
+      HAL_UART_Transmit(&huart1, (uint8_t*)strHigh, strlen(strHigh), 300);
+      HAL_Delay(10);
+      xSemaphoreGive(tokenHandle);
+    }
+    vTaskDelay(pdMS_TO_TICKS(500));
   }
   /* USER CODE END AppTask_High */
 }
@@ -162,10 +173,14 @@ void AppTask_High(void *argument)
 void AppTask_Middle(void *argument)
 {
   /* USER CODE BEGIN AppTask_Middle */
+  char strMid[] = "Task_Middle is running \r\n";
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    HAL_UART_Transmit(&huart1, (uint8_t*)strMid, strlen(strMid), 300);
+    HAL_Delay(10);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    //osDelay(1);
   }
   /* USER CODE END AppTask_Middle */
 }
@@ -180,10 +195,22 @@ void AppTask_Middle(void *argument)
 void AppTask_Low(void *argument)
 {
   /* USER CODE BEGIN AppTask_Low */
+  char str1[] = "Task_Low take it \r\n";
+  char str2[] = "Task_Low give it \r\n";
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    if (xSemaphoreTake(tokenHandle, pdMS_TO_TICKS(200)) == pdTRUE)
+    {
+      HAL_UART_Transmit(&huart1, (uint8_t*)str1, strlen(str1), 300);
+      HAL_Delay(1000);//假设程序运行1s时间
+      HAL_UART_Transmit(&huart1, (uint8_t*)str2, strlen(str2), 300);
+      HAL_Delay(10);
+      xSemaphoreGive(tokenHandle);
+    }
+    vTaskDelay(pdMS_TO_TICKS(20));
+
+    //osDelay(1);
   }
   /* USER CODE END AppTask_Low */
 }
